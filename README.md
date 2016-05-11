@@ -8,6 +8,20 @@ rather relying on secure user authentication. This tool is not intended to
 bypass firewall or proxy restrictions, in fact this tool was designed for better
 corporate security and centralized control.
 
+## Installation
+
+Install the easy way through PyPi:
+
+    pip install proxy-negotiate
+
+Or alternatively download and build yourself:
+
+```
+   git clone https://github.com/cour4g3/proxy-negotiate
+   cd proxy-negotiate
+   python setup.py install
+```
+
 ## Usage
 
 ### nc-negotiate
@@ -16,13 +30,13 @@ A netcat-like implementation for use with programs such as SSH; now by simply
 using ProxyCommand, SSH can safely traverse the proxy through an HTTP CONNECT
 TCP tunnel.
 
-    worm-nc host port [proxy_host] [proxy_port]
+    nc-negotiate host port [proxy_host] [proxy_port]
 
 Example of usage with openSSH:
 
 ```
 Host myexternalhost.com:
-    ProxyCommand worm-nc %h %p
+    ProxyCommand nc-negotiate %h %p
 ```
 
 ## Todo
