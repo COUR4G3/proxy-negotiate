@@ -1,4 +1,4 @@
-# Worm
+# Proxy-Negotiate
 
 HTTP Negotiate (SPNEGO) proxy authentication support for applications. This
 allows applications that do not support HTTP proxies or do not support HTTP
@@ -10,7 +10,7 @@ corporate security and centralized control.
 
 ## Usage
 
-### worm-nc
+### nc-negotiate
 
 A netcat-like implementation for use with programs such as SSH; now by simply
 using ProxyCommand, SSH can safely traverse the proxy through an HTTP CONNECT
