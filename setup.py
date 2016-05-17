@@ -30,6 +30,7 @@ setup(
     ],
     scripts=[
         'bin/nc-negotiate',
+        'bin/proxy-negotiate',
     ],
     classifiers=[
         'Environment :: Console',
@@ -41,7 +42,6 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Internet :: Proxy Servers',
         'Topic :: Security',
         'Topic :: System :: Systems Administration :: Authentication/Directory',
