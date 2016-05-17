@@ -9,14 +9,24 @@ import socket
 import sys
 
 def netcat(host, port, proxy_host, proxy_port):
-    # Establish CONNECT tunnel through proxy
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((proxy_host, proxy_port))
+    """Functions identically to netcat, except that it transparently creates an
+    HTTP CONNECT tunnel over an HTTP proxy that requires HTTP Negotiate (SPNEGO)
+    authentication."""
 
-    sock.send(('CONNECT %s:%d HTTP/1.1\r\n' % (host, port)).encode('ascii'))
-    sock.send(('Host: %s:%d\r\n' % (host, port)).encode('ascii'))
-    sock.send(('Proxy-Connection: Keep-Alive\r\n').encode('ascii'))
-    sock.send(('\r\n').encode('ascii'))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        sock.settimeout(60)
+        sock.connect((proxy_host, proxy_port))
+        sock.send(('CONNECT %s:%d HTTP/1.1\r\n' % (host, port)).encode('ascii'))
+        sock.send(('Host: %s:%d\r\n' % (host, port)).encode('ascii'))
+        sock.send(('Proxy-Connection: Keep-Alive\r\n').encode('ascii'))
+        sock.send(('\r\n').encode('ascii'))
+    except socket.error as e:
+        sys.stderr.write('Failed to connect to proxy [%d]: %s\n' % (e.errno,
+            e.strerror))
+        sock.close()
+        sys.exit(1)
 
     try:
         data = b''
@@ -45,10 +55,15 @@ def netcat(host, port, proxy_host, proxy_port):
 
         # generate SPNEGO token and base64 encode
         bearer = 'Negotiate'
-        service = gssapi.Name('HTTP@%s' % proxy_host, gssapi.NameType.hostbased_service)
-        ctx = gssapi.SecurityContext(name=service, usage='initiate')
 
-        token = ctx.step()
+        try:
+            service = gssapi.Name('HTTP@%s' % proxy_host, gssapi.NameType.hostbased_service)
+            ctx = gssapi.SecurityContext(name=service, usage='initiate')
+            token = ctx.step()
+        except gssapi.exceptions.GeneralError as e:
+            sys.stderr.write('GSSAPI authentication error: %s\n' % (addr, str(e)))
+            sys.exit()
+
         token = base64.b64encode(token).decode('ascii')
 
         # Retry CONNECT tunnel with Proxy-Authorization this time
@@ -68,26 +83,26 @@ def netcat(host, port, proxy_host, proxy_port):
                 # Any data after HTTP Response header is a TCP stream for our program
                 idx = data.find(b'\r\n\r\n') + 4
                 lines = data[:idx+4].split(b'\r\n')[:-2]
-                data = data[idx+4:]
+                data = data[idx:]
                 break
 
         _, status_code, status_message = lines[0].split(b' ', 2)
         status_code = int(status_code)
 
-        if status_code == 407:
+        if status_code != 200:
             sock.close()
-            sys.stderr.write('Proxy %s rejected our credentials\n' % proxy_host)
-            sys.exit(1)
-        elif status_code != 200:
-            sock.close()
-            sys.stderr.write('Proxy %s responded with %d %s\n' % (proxy_host, status_code, status_message))
+            if status_code == 407:
+                sys.stderr.write('Proxy authentication rejected\n')
+            else:
+                sys.stderr.write('Proxy responded with %d %s' % (status_code,
+                    status_message))
             sys.exit(1)
     elif status_code != 200:
         sock.close()
-        sys.stderr.write('Proxy %s responded with %d %s\n' % (proxy_host, status_code, status_message))
+        sys.stderr.write('Proxy responded with %d %s' % (status_code, status_message))
         sys.exit(1)
 
-    sys.stderr.write('Proxy %s connected to %s:%d\n' % (proxy_host, host, port))
+    sys.stderr.write('Proxy connection established\n')
 
     # Any data received after the 200 Connection Established is for our program
     if data:
