@@ -1,4 +1,4 @@
-__version__ = '0.1'
+__version__ = '0.1.1'
 
 import base64
 import fcntl
@@ -18,15 +18,23 @@ def netcat(host, port, proxy_host, proxy_port):
     sock.send(('Proxy-Connection: Keep-Alive\r\n').encode('ascii'))
     sock.send(('\r\n').encode('ascii'))
 
-    data = b''
-    while True:
-        data += sock.recv(1500)
-        if b'\r\n\r\n' in data:
-            # Any data after HTTP Response header is a TCP stream for our program
-            idx = data.find(b'\r\n\r\n') + 4
-            lines = data[:idx+4].split(b'\r\n')[:-2]
-            data = data[idx+4:]
-            break
+    try:
+        data = b''
+        while True:
+            data += sock.recv(1500)
+            if b'\r\n\r\n' in data:
+                idx = data.find(b'\r\n\r\n') + 4
+                lines = data[:idx+4].split(b'\r\n')[:-2]
+                data = data[idx:]
+                break
+    except socket.timeout:
+        sys.stderr.write('Response timeout\n' % addr)
+        sock.close()
+        sys.exit(1)
+    except socket.error as e:
+        sys.stderr.write('Response error (%d): %s\n' % (e.errno, e.strerror))
+        sock.close()
+        sys.exit(1)
 
     _, status_code, status_message = lines[0].split(b' ', 2)
     status_code = int(status_code)
