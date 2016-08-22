@@ -1,4 +1,4 @@
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 import base64
 import fcntl
@@ -104,6 +104,8 @@ def shim_proxy(proxy_host, proxy_port, host='localhost', port=8080):
 
                     other_sock.send(data)
                 except socket.error as e:
+                    del sockets[ready]
+                    del sockets[other_sock]
                     ready.close()
                     other_sock.close()
 
