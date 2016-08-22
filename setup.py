@@ -20,7 +20,7 @@ setup(
     author='Michael de Villiers',
     author_email='twistedcomplexity@gmail.com',
     description='HTTP Negotiate (SPNEGO) proxy authentication support for applications.',
-    long_description=open('README.md', 'r').read(),
+    long_description=open('README.rst', 'r').read(),
     py_modules=['proxy_negotiate'],
     zip_safe=False,
     include_package_data=True,
