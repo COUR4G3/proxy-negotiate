@@ -1,12 +1,11 @@
 Proxy-Negotiate
 ###############
-HTTP Negotiate proxy authentication support for applications. This
-allows applications that do not support HTTP proxies or do not support HTTP
-proxies with Negotiate authentication to allow them to safely traverse
-corporate firewalls without whitelisting IP addresses or MAC addresses and
-rather relying on secure user authentication. This tool is not intended to
-bypass firewall or proxy restrictions, in fact this tool was designed for better
-corporate security and centralized control.
+**This has been completely rewritten as of version 1.0.0.**
+
+HTTP Negotiate proxy authentication support for applications. This allows
+applications that do not natively support proxies (SSH, Telnet) using a
+netcat-like implementation or ones that do not support the Negotiate method of
+proxy authentication by running a local proxy.
 
 Installation
 ============
@@ -27,23 +26,18 @@ Or alternatively download and build yourself:
 
 Usage
 =====
-On Windows you need to be connected to a domain or alternatively running the MIT
-Kerberos Ticket Manager, on Linux you need to install and setup the MIT or
-Heimdal Kerberos client/workstation tools and configure your `krb5.conf`
-correctly.
+You will obviously need to be part of a domain for Negotiate authentication to
+work or alternatively on Windows, be running the Kerberos for Windows Manager.
 
 nc-negotiate
 ------------
-
-A netcat-like implementation for use with programs such as SSH; now by simply
-using ProxyCommand, SSH can safely traverse the proxy through an HTTP CONNECT
-TCP tunnel.
+A netcat-like implementation for use with programs such as SSH and Telnet:
 
 .. code:: shell
 
   $ nc-negotiate host port [proxy_host] [proxy_port]
 
-Example of usage with `ssh` command line:
+Example of usage with OpenSSH command line:
 
 .. code:: shell
 
@@ -58,25 +52,11 @@ Or in your `~/.ssh/config`:
 
 proxy-negotiate
 ---------------
-
-For applications that support proxies but don't support authentication or don't
-support Negotiate, this acts a pseudo-proxy that applies the correct
-Authorization headers and then passes the connection request on:
+For application that support proxies but not Negotiate proxy authentication:
 
 .. code:: shell
 
-  $ proxy-negotiate [proxy_host] [proxy_port] [listen_host] [listen_port]
-
-Then set your proxy configuration in your application or alternatively your
-proxy environment variables:
-
-.. code:: shell
-
-  $ export http_proxy=http://localhost:8080
-
-Now your application will correctly authenticate through the proxy without
-knowing how to. It also means no network passwords floating around in arbitary
-configuration files.
+  $ proxy-negotiate proxy_host proxy_port [listen_host:127.0.0.1] [listen_port:8080]
 
 License
 =======
