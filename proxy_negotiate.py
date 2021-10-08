@@ -67,14 +67,14 @@ class NegotiateProxy(StreamServer):
         service = gssapi.Name('HTTP@%s' % self.upstream[0], gssapi.NameType.hostbased_service)
         ctx = gssapi.SecurityContext(name=service, usage='initiate')
         token = ctx.step()
-        b64token = base64.b64encode(token).encode('ascii')
+        b64token = base64.b64encode(token)
 
         headers, data = data.split(b'\r\n\r\n', 1)
-        headers = headers.split('\r\n')
+        headers = headers.split(b'\r\n')
 
         replaced = False
         for i, header in enumerate(headers):
-            if header.startswith('Proxy-Authorization:'):
+            if header.startswith(b'Proxy-Authorization:'):
                 headers[i] = b'Proxy-Authorization: Negotiate %s' % b64token
                 replaced = True
                 break
